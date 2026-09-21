@@ -1,0 +1,101 @@
+* Nanus engine programming rules
+
+There aren't very many "rules" but I wanted to create this file so that I can establish a few ground rules in terms of the layers of the engine, dependencies, etc.
+
+** Non-layer notes
+Miscellaneous notes to both engine developers and game developers using the engine APIs.
+
+*** Endianness
+Also, keep in mind you need to somehow track endianness of the data you're getting, and then flip multi-byte values based on the endianness. This goes for any file formats, data over a network, etc.
+
+*** Networking
+When networking, please do not pass around non-sized data. Even if on most systems the data is a fixed-width, like float being 32 bits and double being 64 on modern machines, many non-standard systems do not adhere to this, so rather opt for passing fixed-width byte versions of these types, then reinterpret casting or converting them somehow to their desired type.
+
+*** Shaders
+Shader representation is backend-dependent, so Nanus does not require a specific shader format. A platform implementation may accept any byte sequence it understands (for example compiled binaries or source formats), though implementations should define this contract clearly rather than treating shader data as arbitrary bytes.
+
+Nanus also assumes certain rendering conventions. These include expectations such as vertex attribute layouts, uniform/resource bindings, and engine-provided values like view matrices, lighting data, and other renderer state. These conventions can be configured through nanus::renderer, but some platforms may choose to provide limited shader support or omit shaders entirely if implementing the required rendering pipeline is impractical.
+
+*** Floating-point precision and lack of determinism
+Floating-point calculation is very, very, machine and platform specfic. Some machines don't use the common IEEE-754 32-bit format that most people are used to, and this could be a very big problem if you employ some kind of multiplayer game. If you need multiplayer simulation sync where each player has their own, identical simulations, then youd need some way to ensure floating-point accuracy remains the same on every, single, machine. Which is essentially _impossible_. Especially if you take a multi-platform approach to this, or even a multi-CPU approach to this.
+
+Instead, opt for a method where you have a single, authoritative source of truth machine act as a "server" (this could still be a players machine). This one machine will do all of the calculations, and then relay those calculated values back to the other players (called "clients") via "snapshots". These clients send their own input to the server, offloading any calculations needed to the server rather than doing it locally. The clients simply apply those snapshots to their own local simulations, and now everyone's simulations are in sync. If you want to replay a "match" or a simulation, you just store a sequence of snapshots paired with timestamps and then interpolate between them to make it smooth. This is how most games do this nowadays.
+
+** Engine-specific info
+*** Coordinate system
+The coordinate system internally of nanus is right-handed, meaning:
++ +X = move to the right
++ +Y = move up
++ -Z = move forward
+PLEASE NOTE how as Z gets more negative, it means you're moving more forward. This system applies to every matrix calculation, vector transformations, etc.
+
+*** Windowing system & input
+The engine does *not* allow willy-nilly window creation (mostly for compatibility reasons). So at graphics initialization, a single fullscreen window is initialized alongside it. Again, for compatibility reasons, this window is not resizable and is not moveable in any way. So that way, on a Wii U, or a PS2, this would seamlessly work with them. For this reason as well, there are no window-specific methods/functionality that is exposed to the user, as it isn't really necessary.
+
+** Engine layers
+
+There are a couple of explicit layers of the engine that have specific dependencies, and this hierarchy is important to avoid leaking one layer into a layer it isn't supposed to be in.
+
+In order to support these very old, obscure and embedded platforms, we must use libc _sparingly_ and not in any major way, and for all intents and purposes avoid libstdc++ like the plague, since libc is more widely available, and most libstdc++ functionality we need is available via libc (like math, or swapping new/delete for malloc/free). This means even functions such as managing time, pthread etc must be used carefully or even *not at all*. For example, you may be able to get away with using threads to manage both audio and game logic on a normal desktop POSIX-compliant environment, but on a single-process machine like the Nintendo 64 you would have to do some kind of cooperative "processes" where you yield CPU time, or directly interface with hardware via assembly or low-level C libraries. This is why these certain abstractions are necessary, so they can accomodate the older-gen hardware. Keep in mind how old we're talking, because even more recent "older" hardware like the Wii/Wii U have access to these higher-level systems, but consoles like the PS1, original Xbox, etc don't. We're not necessarily targeting these consoles, we just want to give them a chance.
+
+Now this doesn't mean we have to write the implementations of layers in _just_ libc, or that we have to write in C. The engine is basically exclusively C++, making use of features like templates, namespaces, "using" declarations etc. We just use libc over libstdc++ for portability. Again, you may _implement_ your layer in libstdc++ or any other library, but let that stay internally to the implementation, not evident to the user. So don't return a std::shared_ptr<T>, or use any STL containers as parameters, those can get very tricky if a platform has to implement those. Internally, you can use these types, but don't let the user know about it.
+
+*** Bedrock layer
+This layer is eerily simple. It just sets up basic data types and utilities that both low-level and high-level layers can use, either internally or as parameters or return values to functions. They are essentially the "primitives" for the engine. For example, a u32, vec3 or a quaternion, or a matrix, a buffer (pointer + fixed length), or others. On top of that, it provides methods for doing calculations with these types, and grabbing data out of them, like matrix multiplication, getting pi, converting radians to euler angles, etc.
+
+The engine rolls its own versions of the vec2, 3, 4, matrices, etc in favor of GLM, since (despite popular marketing) GLM depends on libc and libstdc++ (yay, portability nightmare!). Almost every platform could support basic libc stuff, so I was moreso concerned with libstdc++ reliance. So I was left with a couple of options, either have to depend on all of libc/libstdc++, c++11/14 nightmares, write my own libstdc++, or write my own subset of GLM. Another thing, I really only need a small subset of glm's uber-functionality, that being the vec2, 3, 4, the matrices/matrix multiplication, quaternions, and then all of their operators and overloads. I could implement that subset in templated C++ without any dependencies aside from cmath fairly simply, it'd just be a hassle. Also, I decide to link to libc, at least the subset that contains cmath, as any platform that somehow doesn't have a cmath library could fairly easily port one using something like newlib, etc.
+
+*** Low-level layer
+The reason why this layer is necessary is so the core logic can write wrappers around these low-level functions, and so all the newly introduced platform, or perhaps even some old platform, has to do is implement the necessary bedrock layer, platform functions, as well as the graphics functions, and *boom* you've just supported a new platform
+
+***** Important notes
+- Please note that any functions in the low-level layer of the code MAY NOT call any high-level layer functions, nor call any of its own functions(nor should it need to in the first place). E.g, code in nanus::platform calling another nanus::platform function is illegal. Any need to implement "helper" or intermediate functions should be kept as functions internal to the source/implementation and not exposed to any function headers.
+
+- Low-level layer headers, like include/platform/platform.hpp and include/graphics/graphics.hpp should *NOT* be exposed to the engine user, only to platform developers, and implementation details of these functions should be dealt with in the same manner.
+  
+**** Platform
+This layer contains low-level functions that are meant to talk to the platform APIs of the environment, such as libc, C++ standard library functions, networking functions, file IO, creating windows, allocating memory dynamically, reading input, etc. The most basic implementation of these on most desktops and even some consoles can be written with just the C++ standard library and SDL2 for reading inputs, making windows, etc. You could use Unix sockets for the networking.
+
+***** Dependencies
+Note that this part of the engine makes use of bedrock datatypes and methods.
+
+**** Graphics
+This layer contains all necessary functions to be able to communicate with the GPU and render images to the screen. This will use primitive objects and integral data-types to perform basic drawing operations, like clearing the screen, putting vertices in buffers, etc. 
+
+***** Design
+It understands "renderable primitives" such as vertices, texture data, mesh data, etc, and uses those to draw onto generated framebuffers. It also provides a way to create and destroy new framebuffers, but please note that these framebuffers may be either gpu or cpu-side (meaning they could be allocated in program RAM). By default the only framebuffer initialized at program initialization is the screen framebuffer.
+
+Graphics may slightly depend on platform in order to gain access to stuff like windows or rendering contexts needed prior to rendering.
+
+
+
+***** Dependencies
+Note that this part of the engine makes use of bedrock datatypes and methods.
+
+**** Example: PlayStation 2 implementation
+The playstation 2 has access to a POSIX-compliant API, so implementing that part would be easy. You would use PS2 APIs to implement the necessary networking functions, malloc/free, and reading from PS2 input devices. Then, for the graphics part, you would wrap PS2 graphics library stuff to be functional with the nanus::graphics api. That would be it, no more hassle. Everything would just work from there, and any game written using Nanus as its sole API would be able to compile to PS2 without a problem.
+
+*** High-level layer
+This layer contains the core logic and function APIs that the user of the engine will use. Classes and objects like 3D models and animations, asset-handlers/memory managers, event systems, entity-component systems, collision detections and physics, AI, audio, etc all find their home here. These higher-level systems make use of the lower-level layer in order to make the engine *platform-agnostic* in its entirety. This means that any platform that can implement the lower-level layer to enable portability, without having to touch the higher-level logic of it all, as long as they follow implementation rules.
+
+Note that in the high-level portion of the editor, you may not depend on *ANY PLATFORM-SPECIFIC APIs or LIBRARIES*, and yes, this include even the C/C++ standard libraries, as not every platform (especially homebrew/custom environments) has access to those. Nanus is not limited to _just POSIX_ or _just "regular" platforms_. It is meant to be hyper-inclusivist, meaning any new platform that wants to give a crack at implementing it can and should be able to succeed with as minimal effort as possible, including the wackiest and most out of place ones, like a 3DS, or a PSP, or a frickin' ASCII terminal window, who knows. This is crucial to the platform-agnosticism this engine presents. If you need stuff like math or physics libraries, etc however, that can be fair game as long as the logic of those libraries are platform-agnostic and they themselves have no platform-specific dependencies.
+
+Although, you shouldn't need these libraries as they should be abstracted within the lower-level layer of the engine in the first place.
+
+**** developer note
+Please note that most of these things will be implemented gradually, and nanus just serves as a sort of "catalyst" for more fleshed-out engines to come. If and when I do decide to create a more sophisticated engine using my experience from this one, I will essentially clone a lot of this code and use it as a base.
+
+**** Renderer
+The renderer provides the core logic of the rendering cycle, and it is what the user will use to draw to teh screen, rather than the lower-level graphics API that nanus has. It would support 3D graphics and 2D graphics by proxy, essentially just drawing 2D geometry as a flat square with a texture on it. It wouldn't necessarily draw UI elements, as UI elements would rather use the renderer to draw _themselves_. 
+
+***** Dependencies
+The Renderer depends on the low-level layer (mostly the graphics part, but optionally the platform part as well). 
+
+**** Engine 
+The Engine contains other necessary core parts of the engine, that don't necessarily deal with rendering. This can include entity-component systems, AI/scripting logic, collision detection, the ticking system of the engine, as well as the core game loop.
+
+***** Dependencies
+This part depends on the platform functions of the low-level layer that it abstracts to higher-level RAII based heuristics.
+
+***** IMPORTANT NOTE
+The core _MAY NOT_ call any nanus::graphics functions as those functions are in use by the nanus::renderer API, and could result in UB or undesired outcomes.

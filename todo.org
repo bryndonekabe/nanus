@@ -1,0 +1,62 @@
+* Nanus: Dwarf 3D "Engine"
+
+Theres a few things I want to establish before I even try to go on to the meat, which would be rendering:
+
+** Debugging
+
+*** Error handling
+NOTE: As a basic principle, DO NOT use exceptions. It'll just create headaches, and I'll probably end up disabling them in build. 
+
+**** Non-essential errors
+The way it'll work for non-essential errors, like a file not being parseable or something, is we will use the Result<T> struct, similar to Rust. Note that this is 
+
+**** Failed assertions
+Assertions that fail will simply abort/crash the program, and print out the assertion that failed, as well as the file and line where it is located so you can quickly know.
+
+***** Runtime assertions
+Runtime assertions will get "wiped" and are only available in debug builds, not release builds in order to better performance. If you really want that kind of functionality, you could use an "ensure" macro which is the same as an assertion, just will appear in debug and release builds.
+
+**** Fatal errors
+Fatal errors that the engine cannot recover from will also just abort and crash the program, printing out a message as to what caused the failure.
+
+** Logging 
+Logging will be handled based on a principle called "log levels". You can optionally choose not to print out logs to the console based on a configuration variable, and can also set them to be streamed o a file or any other std::fstream.
+
+*** Info level (white)
+This level means there is no negative or downside, and that the log is just meant to inform the user of something. Can be seen in release builds.
+
+*** Debug level (green)
+Similar to info level, except this information is only visible in debug builds and is stripped from release builds. Usually more detailed and technical information meant to be seen by the developer.
+
+*** Warn level
+This means that the engine is still operational, but that there is something the user must know about that is hindering some operation or is bottlenecking performance (like having a downgraded version of a library or something). This level indicates that nothing is broken, just for some reason making the engine perform worse.
+
+*** Error level
+This means that some critical operation has failed, but the engine can still recover and the program will continue. For example, failing to load a mesh.
+
+*** Fatal level
+This means that the engine can no longer function after this error. This log will likely be the last one you see before the engine crashes and the entire program aborts.
+
+** GFX
+
+*** Vertices
+
+** Filetypes
+
+All Nanus filetypes are big-endian encoded. There are a couple main filetypes meant to serve different purposes:
+
+*** .nmesh files
+This file describes a 3D Mesh meant for rendering, and is made of three parts:
+
+**** Vertices
+**** Indices
+**** Skeleton
+This 
+*** .nanim files
+*** .ntex files
+This file is extremely simple, and merely encoded the length and width of a texture, and then encoded RGBA8888 pixels for the rest of the file.
+
+*** .nmdl files
+This is is an amalgamation of multiple files, namely these parts:
+
+**** 
