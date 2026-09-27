@@ -46,13 +46,11 @@ This layer is eerily simple. It just sets up basic data types and utilities that
 The engine rolls its own versions of the vec2, 3, 4, matrices, etc in favor of GLM, since (despite popular marketing) GLM depends on libc and libstdc++ (yay, portability nightmare!). Almost every platform could support basic libc stuff, so I was moreso concerned with libstdc++ reliance. So I was left with a couple of options, either have to depend on all of libc/libstdc++, c++11/14 nightmares, write my own libstdc++, or write my own subset of GLM. Another thing, I really only need a small subset of glm's uber-functionality, that being the vec2, 3, 4, the matrices/matrix multiplication, quaternions, and then all of their operators and overloads. I could implement that subset in templated C++ without any dependencies aside from cmath fairly simply, it'd just be a hassle. Also, I decide to link to libc, at least the subset that contains cmath, as any platform that somehow doesn't have a cmath library could fairly easily port one using something like newlib, etc.
 
 *** Low-level layer
-The reason why this layer is necessary is so the core logic can write wrappers around these low-level functions, and so all the newly introduced platform, or perhaps even some old platform, has to do is implement the necessary bedrock layer, platform functions, as well as the graphics functions, and *boom* you've just supported a new platform
+The reason why this layer is necessary is so the core logic can write wrappers around these low-level functions, and so all the newly introduced platform, or perhaps even some old platform, has to do is implement the necessary platform functions, as well as the graphics functions, and *boom* you've just supported a new platform
 
 ***** Important notes
 - Please note that any functions in the low-level layer of the code MAY NOT call any high-level layer functions, nor call any of its own functions(nor should it need to in the first place). E.g, code in nanus::platform calling another nanus::platform function is illegal. Any need to implement "helper" or intermediate functions should be kept as functions internal to the source/implementation and not exposed to any function headers.
 
-- Low-level layer headers, like include/platform/platform.hpp and include/graphics/graphics.hpp should *NOT* be exposed to the engine user, only to platform developers, and implementation details of these functions should be dealt with in the same manner.
-  
 **** Platform
 This layer contains low-level functions that are meant to talk to the platform APIs of the environment, such as libc, C++ standard library functions, networking functions, file IO, creating windows, allocating memory dynamically, reading input, etc. The most basic implementation of these on most desktops and even some consoles can be written with just the C++ standard library and SDL2 for reading inputs, making windows, etc. You could use Unix sockets for the networking.
 
@@ -67,8 +65,6 @@ It understands "renderable primitives" such as vertices, texture data, mesh data
 
 Graphics may slightly depend on platform in order to gain access to stuff like windows or rendering contexts needed prior to rendering.
 
-
-
 ***** Dependencies
 Note that this part of the engine makes use of bedrock datatypes and methods.
 
@@ -82,11 +78,21 @@ Note that in the high-level portion of the editor, you may not depend on *ANY PL
 
 Although, you shouldn't need these libraries as they should be abstracted within the lower-level layer of the engine in the first place.
 
-**** developer note
+**** Developer Note
 Please note that most of these things will be implemented gradually, and nanus just serves as a sort of "catalyst" for more fleshed-out engines to come. If and when I do decide to create a more sophisticated engine using my experience from this one, I will essentially clone a lot of this code and use it as a base.
 
 **** Renderer
-The renderer provides the core logic of the rendering cycle, and it is what the user will use to draw to teh screen, rather than the lower-level graphics API that nanus has. It would support 3D graphics and 2D graphics by proxy, essentially just drawing 2D geometry as a flat square with a texture on it. It wouldn't necessarily draw UI elements, as UI elements would rather use the renderer to draw _themselves_. 
+The renderer provides the core logic of the rendering cycle, and it is what the user will use to draw to teh screen, rather than the lower-level graphics API that nanus has. It would support 3D graphics and 2D graphics by proxy, essentially just drawing 2D geometry as a quad with a texture on it. It wouldn't necessarily draw UI elements, as UI elements would rather use the renderer to draw _themselves_. 
+
+***** How?
+The pipeline would look something like this:
+- Initialize Renderer
+- User sends RenderCommand to Renderer
+- Renderer stores this command in a buffer
+- Via a function call, Renderer flushes all rendering commands and applies rendering logic (frustum culling, occlusion culling, etc) to every model in the most optimized way (least number of calls out to the GPU).
+- Profit
+
+The main advantages this has to just using raw graphics primitives is that we can essentially sort every render command and batch them in a way that allows us to render things very, very, quickly. So if multiple rendering commands get sent for the same model, or same bone data, vertex data, etc. We batch those calls together so we only have to set the uniforms for that *once*. We can also filter out rendering calls, like those that are outside of the view frustum, further reducing our number of draw calls. Furthermore, since all of these draw calls are at once, we only suffer the potential frame drops at _this singular moment_, rather than multiple times per frame.
 
 ***** Dependencies
 The Renderer depends on the low-level layer (mostly the graphics part, but optionally the platform part as well). 
@@ -94,8 +100,9 @@ The Renderer depends on the low-level layer (mostly the graphics part, but optio
 **** Engine 
 The Engine contains other necessary core parts of the engine, that don't necessarily deal with rendering. This can include entity-component systems, AI/scripting logic, collision detection, the ticking system of the engine, as well as the core game loop.
 
+****
 ***** Dependencies
 This part depends on the platform functions of the low-level layer that it abstracts to higher-level RAII based heuristics.
 
 ***** IMPORTANT NOTE
-The core _MAY NOT_ call any nanus::graphics functions as those functions are in use by the nanus::renderer API, and could result in UB or undesired outcomes.
+The Engine _MAY NOT_ call any nanus::graphics functions as those functions are in use by the nanus::renderer API, and could result in UB or undesired outcomes (as rendering/drawing assumes certain previously initialized state, such as uniforms, vertex data, etc).
