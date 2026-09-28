@@ -5,7 +5,7 @@
 mat4 convert_matrix(const aiMatrix4x4 &m) {
   // NOTE: assimp matrices are *row-major*
   // while OURS are *column-major*
-  // so, we just transpose at the end
+  // so, we just transpose at the end (gg ez)
   mat4 result;
   for (int i = 0; i < 4; i++)
     for (int j = 0; j < 4; j++)
