@@ -1,6 +1,9 @@
 #include "util.hpp"
 #include <unordered_map>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 /* *** UTILITY FUNCTIONS *** */
 mat4 convert_matrix(const aiMatrix4x4 &m) {
   // NOTE: assimp matrices are *row-major*
@@ -11,6 +14,44 @@ mat4 convert_matrix(const aiMatrix4x4 &m) {
     for (int j = 0; j < 4; j++)
       result[i][j] = m[i][j];
   return result.transpose();
+}
+Pixel convert_pix(const aiTexel &texel) {
+  return Pixel{.r = texel.r, .g = texel.g, .b = texel.b, .a = texel.a};
+}
+LoadedTexture convert_tex(const aiTexture *tex) {
+  LoadedTexture out;
+  usize w = tex->mWidth;
+  usize h = tex->mHeight;
+  const aiTexel *data = tex->pcData;
+
+  // HACK: this means data is compressed (just leave it for now)
+  if (h == 0) {
+    // when h is 0, tex size in bytes is mwidth;
+    u32 tex_size = w;
+
+    // NOTE: 4 forces it to rgb
+    int width, height, channels;
+    unsigned char *raw = stbi_load_from_memory(
+        (const stbi_uc *)tex->pcData, tex_size, &width, &height, &channels, 4);
+    Pixel *pixels = (Pixel *)raw;
+    for (usize i = 0; i < width * height; ++i) {
+      out.pixels.push_back(pixels[i]);
+    }
+    stbi_image_free(raw);
+
+    out.w = width;
+    out.h = height;
+    return out;
+  } else {
+    // push back pixels into *our* order
+    for (usize i = 0; i < w * h; ++i) {
+      out.pixels.push_back(convert_pix(data[i]));
+    }
+    out.w = w;
+    out.h = h;
+  }
+
+  return out;
 }
 void dump_nodes(const aiNode *node, int depth = 0) {
   for (int i = 0; i < depth; ++i)
@@ -241,6 +282,12 @@ LoadedMesh assimp_load_scene(const aiScene *scene) {
 
   // for each animation
   build_anims(scene, result, bone_map);
+
+  // TODO: textures / texture atlas
+  // HACK: for now, just take the first texture we get bruh
+  if (scene->mNumTextures > 0) {
+    result.tex = convert_tex(scene->mTextures[0]);
+  }
 
   return result;
 }

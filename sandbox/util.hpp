@@ -6,6 +6,7 @@
 
 #include <gfx/anim.hpp>
 #include <gfx/mesh.hpp>
+#include <gfx/texture.hpp>
 
 #include <vector>
 
@@ -54,6 +55,11 @@ struct LoadedAnimation {
   std::vector<LoadedBoneAnimation> channels;
 };
 
+struct LoadedTexture {
+  u32 w, h;
+  std::vector<Pixel> pixels;
+};
+
 struct LoadedMesh {
   std::vector<Vertex> vertices;
   std::vector<Face> indices;
@@ -61,6 +67,8 @@ struct LoadedMesh {
 
   std::vector<mat4> inverse_binds;
   std::vector<mat4> local_transforms;
+
+  LoadedTexture tex;
 
   std::vector<LoadedAnimation> animations;
 };

@@ -204,14 +204,23 @@ int main(int argc, char **argv) {
                             {mesh.indices.data(), mesh.indices.size()}});
 
   DEBUG_PRINT("Vertices: %i\nIndices: %i\nBones: %i\n"
-              "Binds: %i\nLocals: %i\nAnims: %i",
+              "Binds: %i\nLocals: %i\nAnims: %i\n"
+              "TexW: %i TexH: %i",
               mesh.vertices.size(), mesh.indices.size(), mesh.skeleton.size(),
               mesh.inverse_binds.size(), mesh.local_transforms.size(),
-              mesh.animations.size());
+              mesh.animations.size(), mesh.tex.w, mesh.tex.h);
 
   View<Bone> model_bones{mesh.skeleton.data(), mesh.skeleton.size()};
   View<mat4> model_transforms{skinned_transforms.data(),
                               skinned_transforms.size()};
+
+  gfx::Texture model_tex =
+      gfx::Texture{{mesh.tex.pixels.data(), mesh.tex.pixels.size()},
+                   .width = mesh.tex.w,
+                   .height = mesh.tex.h};
+  gfx::TextureHandle model_tex_hdl;
+  if (mesh.tex.w != 0 && mesh.tex.h != 0)
+    model_tex_hdl = gfx::submit(model_tex);
 
   gfx::TextureHandle tex_hdl1 = gfx::submit(tex1);
   vec3 model_dir(0, 0, 0);
@@ -318,7 +327,10 @@ int main(int argc, char **argv) {
     // draw
     mat4 mdl_mat = mat4::rotate_x(model_dir.x) * mat4::rotate_y(model_dir.y);
     gfx::model(mdl_mat * mat4::scale(vec3(1, 2, 1)));
-    gfx::tex(tex_hdl1);
+    if (mesh.tex.w != 0 && mesh.tex.h != 0)
+      gfx::tex(model_tex_hdl);
+    else
+      gfx::tex(tex_hdl1);
 
     // run anim one if it exists
     // NOTE: VERY CRUDE and *NOT* gonna be anywhere near how this gets done in
@@ -332,7 +344,7 @@ int main(int argc, char **argv) {
       std::vector<mat4> anim_local_transforms =
           anim_locals(mesh.animations[0], mesh.local_transforms, time);
 
-      DEBUG_PRINT("time: %f duration: %f", time, dur);
+      // DEBUG_PRINT("time: %f duration: %f", time, dur);
 
       skinned_transforms =
           bone_final(bone_globals(mesh.skeleton, anim_local_transforms),
