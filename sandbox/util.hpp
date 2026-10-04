@@ -60,7 +60,7 @@ struct LoadedTexture {
   std::vector<Pixel> pixels;
 };
 
-struct LoadedMesh {
+struct LoadedModel {
   std::vector<Vertex> vertices;
   std::vector<Face> indices;
   std::vector<Bone> skeleton;
@@ -88,4 +88,4 @@ anim_locals(LoadedAnimation &anim, std::vector<mat4> &default_locals, float t) {
   }
   return result;
 }
-LoadedMesh load_mesh(const char *path);
+LoadedModel load_model(const char *path);

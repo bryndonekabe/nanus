@@ -14,7 +14,7 @@
 
 // vertex and index data is assumed to be right after this header
 namespace nanus::filetypes {
-constexpr u8 NMESH_MAGIC[4] = {'N', 'M', 'E', 'S'};
+constexpr u8 NMESH_MAGIC[4] = {'N', 'M', 'S', 'H'};
 
 #pragma pack(push, 1)
 struct nmesh {
@@ -24,5 +24,10 @@ struct nmesh {
 };
 #pragma pack(pop)
 
-gfx::Mesh get(const nmesh &mesh);
+// check magic + file size math
+bool validate(const nmesh &mesh, usize size);
+
+// convert nmesh -> loaded mesh
+// NOTE: this modifies the data of 'mesh' (endianness)
+gfx::Mesh get(nmesh &mesh);
 } // namespace nanus::filetypes

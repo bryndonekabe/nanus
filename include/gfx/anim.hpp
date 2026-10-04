@@ -28,9 +28,13 @@ struct BoneAnimation {
 // describe an animation
 // NOTE: all time values are in seconds
 struct Animation {
-  double duration;
+  float duration;
   View<BoneAnimation> channels;
+  View<char> name;
 };
+// NOTE: we use channels here in favor of a raw array because
+// youll end up saving space, since you don't have to encode
+// the bones/channels that don't move during the animation
 
 // interpolate
 inline mat4 local_transform(const BoneAnimation &channel, float time) {
@@ -83,7 +87,4 @@ inline mat4 local_transform(const BoneAnimation &channel, float time) {
   return mat4::translate(position) * mat4::rotate(rotation) *
          mat4::scale(scale);
 }
-// NOTE: we use channels here in favor of a raw array because
-// youll end up saving space, since you don't have to encode
-// the bones/channels that don't move during the animation
 } // namespace nanus::gfx

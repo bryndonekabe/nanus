@@ -29,19 +29,18 @@ LoadedTexture convert_tex(const aiTexture *tex) {
     // when h is 0, tex size in bytes is mwidth;
     u32 tex_size = w;
 
-    // NOTE: 4 forces it to rgb
+    // NOTE: 4 forces it to rgba
     int width, height, channels;
     unsigned char *raw = stbi_load_from_memory(
         (const stbi_uc *)tex->pcData, tex_size, &width, &height, &channels, 4);
     Pixel *pixels = (Pixel *)raw;
-    for (usize i = 0; i < width * height; ++i) {
+    for (int i = 0; i < width * height; ++i) {
       out.pixels.push_back(pixels[i]);
     }
     stbi_image_free(raw);
 
     out.w = width;
     out.h = height;
-    return out;
   } else {
     // push back pixels into *our* order
     for (usize i = 0; i < w * h; ++i) {
@@ -149,7 +148,7 @@ void build_parents(const aiScene *scene, std::vector<mat4> &local_transforms,
   build_parents_recurse(scene->mRootNode, local_transforms, skeleton, bone_map);
 }
 
-void build_mesh(const aiScene *scene, LoadedMesh &result, BoneMap &bone_map) {
+void build_mesh(const aiScene *scene, LoadedModel &result, BoneMap &bone_map) {
   for (unsigned mesh_index = 0; mesh_index < scene->mNumMeshes; ++mesh_index) {
     const aiMesh *mesh = scene->mMeshes[mesh_index];
     const u32 vertex_offset = result.vertices.size();
@@ -213,7 +212,7 @@ void build_mesh(const aiScene *scene, LoadedMesh &result, BoneMap &bone_map) {
   }
 }
 
-void build_anims(const aiScene *scene, LoadedMesh &result, BoneMap &bone_map) {
+void build_anims(const aiScene *scene, LoadedModel &result, BoneMap &bone_map) {
   for (unsigned anim_index = 0; anim_index < scene->mNumAnimations;
        ++anim_index) {
     const aiAnimation *animation = scene->mAnimations[anim_index];
@@ -264,8 +263,8 @@ void build_anims(const aiScene *scene, LoadedMesh &result, BoneMap &bone_map) {
     // animation->mChannels
   }
 }
-LoadedMesh assimp_load_scene(const aiScene *scene) {
-  LoadedMesh result;
+LoadedModel assimp_load_scene(const aiScene *scene) {
+  LoadedModel result;
   BoneMap bone_map;
 
   // DEBUG PRINTING
@@ -292,7 +291,7 @@ LoadedMesh assimp_load_scene(const aiScene *scene) {
   return result;
 }
 
-LoadedMesh load_mesh(const char *path) {
+LoadedModel load_model(const char *path) {
   Assimp::Importer importer;
 
   const aiScene *scene = importer.ReadFile(

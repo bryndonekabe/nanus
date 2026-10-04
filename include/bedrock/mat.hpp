@@ -351,4 +351,13 @@ using mat4 = tmat4<f32>;
 using dmat2 = tmat2<f64>;
 using dmat3 = tmat3<f64>;
 using dmat4 = tmat4<f64>;
+
+// network order types
+using nmat2 = tmat2<nf32>;
+using nmat3 = tmat3<nf32>;
+using nmat4 = tmat4<nf32>;
+
+using ndmat2 = tmat2<nf64>;
+using ndmat3 = tmat3<nf64>;
+using ndmat4 = tmat4<nf64>;
 }; // namespace nanus

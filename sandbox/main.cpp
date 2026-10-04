@@ -194,32 +194,34 @@ int main(int argc, char **argv) {
   gfx::init();
   input::init();
 
-  LoadedMesh mesh = load_mesh(argv[1]);
+  LoadedModel model = load_model(argv[1]);
   // apply propagation + inverse bind to transforms
-  std::vector<mat4> skinned_transforms = bone_final(
-      bone_globals(mesh.skeleton, mesh.local_transforms), mesh.inverse_binds);
+  std::vector<mat4> skinned_transforms =
+      bone_final(bone_globals(model.skeleton, model.local_transforms),
+                 model.inverse_binds);
 
-  gfx::MeshHandle model =
-      gfx::submit(gfx::Mesh{{mesh.vertices.data(), mesh.vertices.size()},
-                            {mesh.indices.data(), mesh.indices.size()}});
+  gfx::MeshHandle mesh =
+      gfx::submit(gfx::Mesh{{model.vertices.data(), model.vertices.size()},
+                            {model.indices.data(), model.indices.size()}});
 
   DEBUG_PRINT("Vertices: %i\nIndices: %i\nBones: %i\n"
               "Binds: %i\nLocals: %i\nAnims: %i\n"
               "TexW: %i TexH: %i",
-              mesh.vertices.size(), mesh.indices.size(), mesh.skeleton.size(),
-              mesh.inverse_binds.size(), mesh.local_transforms.size(),
-              mesh.animations.size(), mesh.tex.w, mesh.tex.h);
+              model.vertices.size(), model.indices.size(),
+              model.skeleton.size(), model.inverse_binds.size(),
+              model.local_transforms.size(), model.animations.size(),
+              model.tex.w, model.tex.h);
 
-  View<Bone> model_bones{mesh.skeleton.data(), mesh.skeleton.size()};
+  View<Bone> model_bones{model.skeleton.data(), model.skeleton.size()};
   View<mat4> model_transforms{skinned_transforms.data(),
                               skinned_transforms.size()};
 
   gfx::Texture model_tex =
-      gfx::Texture{{mesh.tex.pixels.data(), mesh.tex.pixels.size()},
-                   .width = mesh.tex.w,
-                   .height = mesh.tex.h};
+      gfx::Texture{{model.tex.pixels.data(), model.tex.pixels.size()},
+                   .width = model.tex.w,
+                   .height = model.tex.h};
   gfx::TextureHandle model_tex_hdl;
-  if (mesh.tex.w != 0 && mesh.tex.h != 0)
+  if (model.tex.w != 0 && model.tex.h != 0)
     model_tex_hdl = gfx::submit(model_tex);
 
   gfx::TextureHandle tex_hdl1 = gfx::submit(tex1);
@@ -327,7 +329,7 @@ int main(int argc, char **argv) {
     // draw
     mat4 mdl_mat = mat4::rotate_x(model_dir.x) * mat4::rotate_y(model_dir.y);
     gfx::model(mdl_mat * mat4::scale(vec3(1, 2, 1)));
-    if (mesh.tex.w != 0 && mesh.tex.h != 0)
+    if (model.tex.w != 0 && model.tex.h != 0)
       gfx::tex(model_tex_hdl);
     else
       gfx::tex(tex_hdl1);
@@ -335,24 +337,24 @@ int main(int argc, char **argv) {
     // run anim one if it exists
     // NOTE: VERY CRUDE and *NOT* gonna be anywhere near how this gets done in
     // future
-    if (mesh.animations.size() > 0) {
-      double dur = mesh.animations[0].duration;
+    if (model.animations.size() > 0) {
+      double dur = model.animations[0].duration;
       time += dt;
       // loop over
       time = std::fmod(time, dur);
 
       std::vector<mat4> anim_local_transforms =
-          anim_locals(mesh.animations[0], mesh.local_transforms, time);
+          anim_locals(model.animations[0], model.local_transforms, time);
 
       // DEBUG_PRINT("time: %f duration: %f", time, dur);
 
       skinned_transforms =
-          bone_final(bone_globals(mesh.skeleton, anim_local_transforms),
-                     mesh.inverse_binds);
+          bone_final(bone_globals(model.skeleton, anim_local_transforms),
+                     model.inverse_binds);
       model_transforms = {skinned_transforms.data(), skinned_transforms.size()};
     }
     gfx::bones(model_transforms);
-    gfx::draw(model);
+    gfx::draw(mesh);
 
     // swap buffers
     gfx::swap();

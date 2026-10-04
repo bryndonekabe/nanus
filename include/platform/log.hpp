@@ -9,7 +9,7 @@
 
 namespace nanus::platform {
 enum class LogLevel : u8 { Info = 0, Debug, Warn, Error, Fatal };
-static const char *log_keywords[] = {
+inline const char *log_keywords[] = {
     ANSI_STR(BWHITE, "INFO"), ANSI_STR(GREEN, "DEBUG"),
     ANSI_STR(YELLOW, "WARN"), ANSI_STR(MAGENTA, "ERROR"),
     ANSI_STR(RED, "FATAL")};

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <bedrock/net.hpp>
+#include <gfx/mesh.hpp>
+#include <gfx/model.hpp>
 // An nmdl file is the top-level file that holds model data, which is the
 // combination of mesh data and texture data It is meant primarily for speed,
 // data efficiency, and ease of use This means there are little to no
@@ -17,9 +19,14 @@ struct nmdl {
   u8 magic[4];
   nu16 version; // version must == current to work on nanus
   nu16 flags;   // see below
-  // offsets into data / path
+
+  // offsets into data or path
   nu32 nmesh_offset;
   nu32 ntex_offset;
+  nu32 nskel_offset;
+
+  nu32 num_anims;
+  nu32 nanim_offset;
 };
 #pragma pack(pop)
 
@@ -29,14 +36,17 @@ struct nmdl {
 constexpr u16 NMDL_FLAG_MESH_REF = 1 << 0;
 constexpr u16 NMDL_FLAG_TEX_REF = 1 << 1;
 
-// when a flag is set for either offset, that data can be interpreted as a
-// null-terminated ascii string that references a file. This string is a
-// relative path based on the file location of the nmdl file itself.
-// It is entirely optional, and as a default this option is off.
-
-// interpret pointer as an nmdl
-const nmdl *read(const u8 *ptr);
+// TODO: implement this stuff here:
+// TODO: how to add flags for animations?
+/*
+when a flag is set for either offset, that data can be interpreted as a
+null-terminated ascii string that references a file. This string is a relative
+path based on the file location of the nmdl file itself. It is entirely
+optional, and as a default this option is off.
+ */
 
 // validate the nmdl
 bool validate(const nmdl &mdl);
+// go from nmdl -> loaded model
+gfx::Model get(const nmdl &mdl);
 }; // namespace nanus::filetypes
