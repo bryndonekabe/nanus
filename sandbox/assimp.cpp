@@ -222,6 +222,7 @@ void build_anims(const aiScene *scene, LoadedModel &result, BoneMap &bone_map) {
     if (tps == 0) // fallback ticks per second
       tps = 25.0;
     out_anim.duration = animation->mDuration / tps;
+    out_anim.name = animation->mName.C_Str();
 
     for (unsigned i = 0; i < animation->mNumChannels; ++i) {
       const aiNodeAnim *channel = animation->mChannels[i];

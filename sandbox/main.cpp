@@ -211,6 +211,9 @@ int main(int argc, char **argv) {
               model.skeleton.size(), model.inverse_binds.size(),
               model.local_transforms.size(), model.animations.size(),
               model.tex.w, model.tex.h);
+  for (int i = 0; i < model.animations.size(); ++i) {
+    DEBUG_PRINT("Anim: %s", model.animations[i].name);
+  }
 
   View<Bone> model_bones{model.skeleton.data(), model.skeleton.size()};
   View<mat4> model_transforms{skinned_transforms.data(),

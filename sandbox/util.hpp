@@ -53,6 +53,7 @@ struct LoadedBoneAnimation {
 struct LoadedAnimation {
   double duration;
   std::vector<LoadedBoneAnimation> channels;
+  const char *name;
 };
 
 struct LoadedTexture {
