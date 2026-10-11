@@ -121,22 +121,43 @@ add_executable(sandbox
     sandbox/main.cpp
     sandbox/assimp.cpp
 )
-
+target_link_libraries(sandbox PRIVATE nanus)
 # Use with assimp
 find_package(assimp REQUIRED)
-target_link_libraries(sandbox PRIVATE nanus)
 target_link_libraries(sandbox PRIVATE assimp::assimp)
-
 target_compile_options(sandbox PRIVATE
     -Wall
     -Wextra
     -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
 )
-
 if(WIIU)
     message(STATUS "Making rpx")
     wut_create_rpx(sandbox)
 endif()
+
+# Tools
+function(tool name)
+add_executable(${name}
+)
+file(GLOB_RECURSE ${name}_TOOL_SOURCES CONFIGURE_DEPENDS
+    tools/${name}/*.cpp
+)
+target_sources(${name} PRIVATE
+    ${${name}_TOOL_SOURCES}
+)
+target_link_libraries(${name} PRIVATE nanus)
+target_compile_options(${name} PRIVATE
+    -Wall
+    -Wextra
+    -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
+)
+endfunction()
+
+# nanusc
+tool(nanusc)
+find_package(assimp REQUIRED) # with assimp
+target_link_libraries(nanusc PRIVATE assimp::assimp)
+
 
 message(STATUS "SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "C COMPILER: ${CMAKE_C_COMPILER}")
