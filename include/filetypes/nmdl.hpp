@@ -1,8 +1,14 @@
 #pragma once
 
 #include <bedrock/net.hpp>
+#include <gfx/anim.hpp>
 #include <gfx/mesh.hpp>
 #include <gfx/model.hpp>
+
+#include <filetypes/nanim.hpp>
+#include <filetypes/nmesh.hpp>
+#include <filetypes/nskel.hpp>
+#include <filetypes/ntex.hpp>
 // An nmdl file is the top-level file that holds model data, which is the
 // combination of mesh data and texture data It is meant primarily for speed,
 // data efficiency, and ease of use This means there are little to no
@@ -48,5 +54,23 @@ optional, and as a default this option is off.
 // validate the nmdl
 bool validate(const nmdl &mdl);
 // go from nmdl -> loaded model
-gfx::Model get(const nmdl &mdl);
+// NOTE: this modifies data
+inline gfx::Model get(nmdl &mdl) {
+  byte *raw = (byte *)&mdl;
+
+  byte *mesh = raw + (u32)mdl.nmesh_offset;
+  byte *tex = raw + (u32)mdl.ntex_offset;
+  byte *skel = raw + (u32)mdl.nskel_offset;
+
+  // TODO: have to treat animations a bit differently
+  // NOTE: not sure what to do here?
+  byte *raw_anims = raw + (u32)mdl.nanim_offset;
+  View<gfx::Animation> anims{nullptr, 0};
+
+  gfx::Model out{.mesh = get(*(nmesh *)mesh),
+                 .tex = get(*(ntex *)tex),
+                 .skel = get(*(nskel *)skel),
+                 .anims = anims};
+  return out;
+}
 }; // namespace nanus::filetypes

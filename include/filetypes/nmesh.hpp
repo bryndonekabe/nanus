@@ -17,12 +17,27 @@ namespace nanus::filetypes {
 constexpr u8 NMESH_MAGIC[4] = {'N', 'M', 'S', 'H'};
 
 #pragma pack(push, 1)
+struct nvert {
+  // render data
+  nvec3 position;
+  nvec3 normal;
+  nvec2 uv;
+
+  // skinning data
+  u8 bone_ids[4];
+  u8 bone_weights[4];
+};
+struct nface {
+  nu32 indices[3];
+};
 struct nmesh {
   u8 magic[4];
   nu32 num_vertices;
   nu32 num_indices;
 };
 #pragma pack(pop)
+// vertices is x number of nvert
+// indices after is x number of nface
 
 // check magic + file size math
 bool validate(const nmesh &mesh, usize size);

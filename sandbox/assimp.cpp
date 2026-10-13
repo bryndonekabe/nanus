@@ -269,7 +269,7 @@ LoadedModel assimp_load_scene(const aiScene *scene) {
   BoneMap bone_map;
 
   // DEBUG PRINTING
-  dump_nodes(scene->mRootNode, 0);
+  // dump_nodes(scene->mRootNode, 0);
 
   // set up the skeleton array
   build_skel(scene, result.skeleton, result.local_transforms,

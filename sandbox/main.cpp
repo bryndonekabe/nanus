@@ -1,6 +1,7 @@
 #include <bedrock/containers.hpp>
 #include <bedrock/mat.hpp>
 #include <bedrock/vec.hpp>
+#include <filetypes/nmdl.hpp>
 #include <gfx/common.hpp>
 #include <gfx/mesh.hpp>
 #include <gfx/texture.hpp>
@@ -194,6 +195,13 @@ int main(int argc, char **argv) {
   gfx::init();
   input::init();
 
+  platform::FileHandle in_file = platform::fopen(argv[1]);
+  std::vector<byte> buf;
+  usize in_file_size = platform::fsize(in_file);
+  buf.resize(in_file_size);
+  platform::fread(buf.data(), in_file_size, in_file);
+  gfx::Model mod = filetypes::get(*(filetypes::nmdl *)buf.data());
+
   LoadedModel model = load_model(argv[1]);
   // apply propagation + inverse bind to transforms
   std::vector<mat4> skinned_transforms =
@@ -203,17 +211,6 @@ int main(int argc, char **argv) {
   gfx::MeshHandle mesh =
       gfx::submit(gfx::Mesh{{model.vertices.data(), model.vertices.size()},
                             {model.indices.data(), model.indices.size()}});
-
-  DEBUG_PRINT("Vertices: %i\nIndices: %i\nBones: %i\n"
-              "Binds: %i\nLocals: %i\nAnims: %i\n"
-              "TexW: %i TexH: %i",
-              model.vertices.size(), model.indices.size(),
-              model.skeleton.size(), model.inverse_binds.size(),
-              model.local_transforms.size(), model.animations.size(),
-              model.tex.w, model.tex.h);
-  for (int i = 0; i < model.animations.size(); ++i) {
-    DEBUG_PRINT("Anim: %s", model.animations[i].name);
-  }
 
   View<Bone> model_bones{model.skeleton.data(), model.skeleton.size()};
   View<mat4> model_transforms{skinned_transforms.data(),

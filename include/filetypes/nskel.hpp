@@ -10,6 +10,10 @@ namespace nanus::filetypes {
 constexpr u8 NSKEL_MAGIC[4] = {'N', 'S', 'K', 'L'};
 
 #pragma pack(push, 1)
+struct nbone {
+  u8 parent;
+  u8 name[3]; // ascii chars
+};
 struct nskel {
   u8 magic[4];
   nu32 num_bones;

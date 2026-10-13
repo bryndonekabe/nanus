@@ -53,8 +53,8 @@ inline gfx::Texture get(ntex &tex) {
   usize size = h * w;
   return gfx::Texture{
       .pixels = View<gfx::Pixel>{tex_ptr, size},
-      .height = h,
       .width = w,
+      .height = h,
   };
 }
 
