@@ -14,21 +14,21 @@ using namespace nanus;
 using namespace gfx;
 
 // recursively get the global transform of a bone
-inline mat4 bone_global(usize bone_id, const std::vector<Bone> &skeleton,
-                        const std::vector<mat4> &local_transforms) {
-  u8 parent = skeleton[bone_id].parent;
+inline mat4 bone_global(usize bone_id, View<Bone> skeleton,
+                        View<mat4> local_transforms) {
+  u8 parent = skeleton.ptr[bone_id].parent;
   if (parent == bone_id)
-    return local_transforms[bone_id];
+    return local_transforms.ptr[bone_id];
   else
+    // multiply local * parents local
     return bone_global(parent, skeleton, local_transforms) *
-           local_transforms[bone_id];
+           local_transforms.ptr[bone_id];
 }
 // calculate bone matrix global transforms
-inline std::vector<mat4>
-bone_globals(const std::vector<Bone> &skeleton,
-             const std::vector<mat4> &local_transforms) {
+inline std::vector<mat4> bone_globals(View<Bone> skeleton,
+                                      View<mat4> local_transforms) {
   std::vector<mat4> result;
-  for (usize i = 0; i < skeleton.size(); ++i) {
+  for (usize i = 0; i < skeleton.len; ++i) {
     result.push_back(bone_global(i, skeleton, local_transforms));
   }
 
@@ -36,11 +36,12 @@ bone_globals(const std::vector<Bone> &skeleton,
 }
 // apply skinning
 inline std::vector<mat4> bone_final(const std::vector<mat4> &globals,
-                                    const std::vector<mat4> &inverse_binds) {
+                                    View<mat4> inverse_binds) {
   std::vector<mat4> result;
   for (usize i = 0; i < globals.size(); ++i) {
-    result.push_back(globals[i] * inverse_binds[i]);
+    result.push_back(globals[i] * inverse_binds.ptr[i]);
   }
+  DEBUG_PRINT("after final");
   return result;
 }
 

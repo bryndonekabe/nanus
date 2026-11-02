@@ -45,7 +45,13 @@ template <typename T> struct tvec2 {
     return len != 0 ? *this / len : tvec2{};
   }
 
+  // casting
+  template <typename Type> explicit operator tvec2<Type>() const {
+    return tvec2<Type>{(Type)x, (Type)y};
+  }
+
   // unary ops
+
   constexpr const T &operator[](usize i) const { return elements[i]; }
   constexpr T &operator[](usize i) { return elements[i]; }
   constexpr tvec2 operator-() const { return tvec2{-x, -y}; }
@@ -166,6 +172,11 @@ template <typename T> struct tvec3 {
   tvec3 normalized() const {
     auto len = length();
     return len != 0 ? *this / len : tvec3{};
+  }
+
+  // casting
+  template <typename Type> explicit operator tvec3<Type>() const {
+    return tvec3<Type>{(Type)x, (Type)y, (Type)z};
   }
 
   // unary ops
@@ -301,6 +312,11 @@ template <typename T> struct tvec4 {
   tvec4 normalized() const {
     auto len = length();
     return len != 0 ? *this / len : tvec4{};
+  }
+
+  // casting
+  template <typename Type> explicit operator tvec4<Type>() const {
+    return tvec4<Type>{(Type)x, (Type)y, (Type)z, (Type)w};
   }
 
   // unary ops

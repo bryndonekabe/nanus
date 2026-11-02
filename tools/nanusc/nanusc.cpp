@@ -19,26 +19,17 @@ void add_ptr_bytes(byte *ptr, usize n, std::vector<byte> &bytes) {
 void add_nmats(mat4 *ptr, usize n, std::vector<byte> &bytes) {
   for (int i = 0; i < n; ++i) {
     mat4 m = ptr[i];
-    nmat4 mat{
-        nvec4(nf32(m.col0.x), nf32(m.col0.y), nf32(m.col0.z), nf32(m.col0.w)),
-        nvec4(nf32(m.col1.x), nf32(m.col1.y), nf32(m.col1.z), nf32(m.col1.w)),
-        nvec4(nf32(m.col2.x), nf32(m.col2.y), nf32(m.col2.z), nf32(m.col2.w)),
-        nvec4(nf32(m.col3.x), nf32(m.col3.y), nf32(m.col3.z), nf32(m.col3.w))};
+    nmat4 mat{(nmat4)m};
     add_bytes(mat, bytes);
   }
 }
 
-// NOTE: n counts as starting offset inside the buffer so just use that
 void add_verts(LoadedModel &model, std::vector<byte> &bytes) {
   for (int i = 0; i < model.vertices.size(); i++) {
     nvert vert{
-        .position = nvec3(nf32(model.vertices[i].position.x),
-                          nf32(model.vertices[i].position.y),
-                          nf32(model.vertices[i].position.z)),
-        .normal = nvec3(nf32(model.vertices[i].normal.x),
-                        nf32(model.vertices[i].normal.y),
-                        nf32(model.vertices[i].normal.z)),
-        .uv = nvec2(nf32(model.vertices[i].uv.x), nf32(model.vertices[i].uv.y)),
+        .position = (nvec3)model.vertices[i].position,
+        .normal = (nvec3)model.vertices[i].normal,
+        .uv = (nvec2)model.vertices[i].uv,
         .bone_ids = {model.vertices[i].bone_ids[0],
                      model.vertices[i].bone_ids[1],
                      model.vertices[i].bone_ids[2],
@@ -59,6 +50,8 @@ void add_faces(LoadedModel &model, std::vector<byte> &bytes) {
     add_bytes(face, bytes);
   }
 }
+
+// NOTE: n counts as starting offset inside the buffer so just use that
 usize add_mesh(LoadedModel &model, std::vector<byte> &bytes) {
   nmesh mesh{
       .magic = {NMESH_MAGIC[0], NMESH_MAGIC[1], NMESH_MAGIC[2], NMESH_MAGIC[3]},
@@ -80,8 +73,8 @@ usize add_tex(LoadedModel &model, std::vector<byte> &bytes) {
       .height = nu16(model.tex.h)};
   usize n = bytes.size();
   add_bytes(tex, bytes);
-  add_ptr_bytes((byte *)model.tex.pixels.data(), model.tex.w * model.tex.h,
-                bytes);
+  add_ptr_bytes((byte *)model.tex.pixels.data(),
+                model.tex.pixels.size() * sizeof(gfx::Pixel), bytes);
   return n;
 }
 
@@ -100,10 +93,10 @@ usize add_skel(LoadedModel &model, std::vector<byte> &bytes) {
   return n;
 }
 // HACK: actually support anims correctly chud
+// TODO: we want animations gangalanche
 usize add_anims(LoadedModel &model, std::vector<byte> &bytes) { return 0; }
 
 void model_to_nmdl(LoadedModel &model, std::vector<byte> &bytes) {
-
   nmdl mdl_header{
       .magic = {NMDL_MAGIC[0], NMDL_MAGIC[1], NMDL_MAGIC[2], NMDL_MAGIC[3]},
       .version = nu16(NMDL_VERSION),
@@ -115,13 +108,14 @@ void model_to_nmdl(LoadedModel &model, std::vector<byte> &bytes) {
       .num_anims = nu32(0),
       .nanim_offset = nu32(0)};
   add_bytes(mdl_header, bytes);
-  // HACK: now we've gotta get the header backit back to properly set the
-  // offsets should just be at start
-  nmdl *as_nmdl = (nmdl *)bytes.data();
+
+  // HACK: now we've gotta get the header back to properly set the
+  // offsets,  should just be at start of data
   u32 mesh_off = add_mesh(model, bytes);
   u32 tex_off = add_tex(model, bytes);
   u32 skel_off = add_skel(model, bytes);
   u32 anim_off = add_anims(model, bytes);
+  nmdl *as_nmdl = (nmdl *)bytes.data();
   as_nmdl->nmesh_offset = mesh_off;
   as_nmdl->ntex_offset = tex_off;
   as_nmdl->nskel_offset = skel_off;

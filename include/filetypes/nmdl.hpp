@@ -64,6 +64,7 @@ inline gfx::Model get(nmdl &mdl) {
 
   // TODO: have to treat animations a bit differently
   // NOTE: not sure what to do here?
+  // HACK: right now anims *NOT* supported
   byte *raw_anims = raw + (u32)mdl.nanim_offset;
   View<gfx::Animation> anims{nullptr, 0};
 

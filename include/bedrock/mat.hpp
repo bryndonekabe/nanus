@@ -37,6 +37,11 @@ template <typename T> struct tmat2 {
     return tmat2<T>{{col1.y, -col0.y}, {-col1.x, col0.x}} * inv_det;
   }
 
+  // casting
+  template <typename Type> explicit operator tmat2<Type>() const {
+    return tmat2<Type>{(tvec2<Type>)col0, (tvec2<Type>)col1};
+  }
+
   // unary ops
   constexpr const tvec2<T> &operator[](usize i) const { return columns[i]; }
   constexpr tvec2<T> &operator[](usize i) { return columns[i]; }
@@ -123,6 +128,11 @@ template <typename T> struct tmat3 {
                  {-(b * i - c * h), (a * i - c * g), -(a * h - b * g)},
                  {(b * f - c * e), -(a * f - c * d), (a * e - b * d)}} *
            inv_det;
+  }
+
+  // casting
+  template <typename Type> explicit operator tmat3<Type>() const {
+    return tmat3<Type>{(tvec3<Type>)col0, (tvec3<Type>)col1, (tvec3<Type>)col2};
   }
 
   // unary ops
@@ -297,6 +307,12 @@ template <typename T> struct tmat4 {
     inv[3][2] = -columns[3][0] * s3 + columns[3][1] * s1 - columns[3][2] * s0;
     inv[3][3] = columns[2][0] * s3 - columns[2][1] * s1 + columns[2][2] * s0;
     return inv * inv_det;
+  }
+
+  // casting
+  template <typename Type> explicit operator tmat4<Type>() const {
+    return tmat4<Type>{(tvec4<Type>)col0, (tvec4<Type>)col1, (tvec4<Type>)col2,
+                       (tvec4<Type>)col3};
   }
 
   // unary ops

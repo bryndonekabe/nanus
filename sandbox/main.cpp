@@ -196,33 +196,35 @@ int main(int argc, char **argv) {
   input::init();
 
   platform::FileHandle in_file = platform::fopen(argv[1]);
-  std::vector<byte> buf;
   usize in_file_size = platform::fsize(in_file);
+  std::vector<byte> buf;
   buf.resize(in_file_size);
   platform::fread(buf.data(), in_file_size, in_file);
   gfx::Model mod = filetypes::get(*(filetypes::nmdl *)buf.data());
+  gfx::TextureHandle model_tex_hdl = gfx::submit(mod.tex);
+  gfx::MeshHandle mod_mesh = gfx::submit(mod.mesh);
 
-  LoadedModel model = load_model(argv[1]);
-  // apply propagation + inverse bind to transforms
-  std::vector<mat4> skinned_transforms =
-      bone_final(bone_globals(model.skeleton, model.local_transforms),
-                 model.inverse_binds);
+  // LoadedModel model = load_model(argv[1]);
+  // // apply propagation + inverse bind to transforms
+  // std::vector<mat4> skinned_transforms =
+  //     bone_final(bone_globals(model.skeleton, model.local_transforms),
+  //                model.inverse_binds);
 
-  gfx::MeshHandle mesh =
-      gfx::submit(gfx::Mesh{{model.vertices.data(), model.vertices.size()},
-                            {model.indices.data(), model.indices.size()}});
+  // gfx::MeshHandle mesh =
+  //     gfx::submit(gfx::Mesh{{model.vertices.data(), model.vertices.size()},
+  //                           {model.indices.data(), model.indices.size()}});
 
-  View<Bone> model_bones{model.skeleton.data(), model.skeleton.size()};
-  View<mat4> model_transforms{skinned_transforms.data(),
-                              skinned_transforms.size()};
+  // View<Bone> model_bones{model.skeleton.data(), model.skeleton.size()};
+  // View<mat4> model_transforms{skinned_transforms.data(),
+  //                             skinned_transforms.size()};
 
-  gfx::Texture model_tex =
-      gfx::Texture{{model.tex.pixels.data(), model.tex.pixels.size()},
-                   .width = model.tex.w,
-                   .height = model.tex.h};
-  gfx::TextureHandle model_tex_hdl;
-  if (model.tex.w != 0 && model.tex.h != 0)
-    model_tex_hdl = gfx::submit(model_tex);
+  // gfx::Texture model_tex =
+  //     gfx::Texture{{model.tex.pixels.data(), model.tex.pixels.size()},
+  //                  .width = model.tex.w,
+  //                  .height = model.tex.h};
+  // gfx::TextureHandle model_tex_hdl;
+  // if (model.tex.w != 0 && model.tex.h != 0)
+  //   model_tex_hdl = gfx::submit(model_tex);
 
   gfx::TextureHandle tex_hdl1 = gfx::submit(tex1);
   vec3 model_dir(0, 0, 0);
@@ -329,32 +331,34 @@ int main(int argc, char **argv) {
     // draw
     mat4 mdl_mat = mat4::rotate_x(model_dir.x) * mat4::rotate_y(model_dir.y);
     gfx::model(mdl_mat * mat4::scale(vec3(1, 2, 1)));
-    if (model.tex.w != 0 && model.tex.h != 0)
-      gfx::tex(model_tex_hdl);
-    else
-      gfx::tex(tex_hdl1);
+    gfx::tex(model_tex_hdl);
 
     // run anim one if it exists
     // NOTE: VERY CRUDE and *NOT* gonna be anywhere near how this gets done in
     // future
-    if (model.animations.size() > 0) {
-      double dur = model.animations[0].duration;
-      time += dt;
-      // loop over
-      time = std::fmod(time, dur);
+    // if (model.animations.size() > 0) {
+    //   double dur = model.animations[0].duration;
+    //   time += dt;
+    //   // loop over
+    //   time = std::fmod(time, dur);
 
-      std::vector<mat4> anim_local_transforms =
-          anim_locals(model.animations[0], model.local_transforms, time);
+    //   std::vector<mat4> anim_local_transforms =
+    //       anim_locals(model.animations[0], model.local_transforms, time);
 
-      // DEBUG_PRINT("time: %f duration: %f", time, dur);
-
-      skinned_transforms =
-          bone_final(bone_globals(model.skeleton, anim_local_transforms),
-                     model.inverse_binds);
-      model_transforms = {skinned_transforms.data(), skinned_transforms.size()};
+    // DEBUG_PRINT("before skinned");
+    // std::vector<mat4> skinned_transforms =
+    //     bone_final(bone_globals(mod.skel.bones, mod.skel.bind_locals),
+    //                mod.skel.inverse_binds);
+    // DEBUG_PRINT("after skinned");
+    // View<mat4> model_transforms = {skinned_transforms.data(),
+    //                                skinned_transforms.size()};
+    std::vector<mat4> mats;
+    for (int i = 0; i < 64; ++i) {
+      mats.push_back(mat4::identity());
     }
-    gfx::bones(model_transforms);
-    gfx::draw(mesh);
+    View<mat4> _model_transforms = {mats.data(), mats.size()};
+    gfx::bones(_model_transforms);
+    gfx::draw(mod_mesh);
 
     // swap buffers
     gfx::swap();
