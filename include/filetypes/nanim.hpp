@@ -38,9 +38,10 @@ struct nanim {
 
 /* The following animation data is assumed after this header:
 - array of channels (nboneanim)
--- array of positions (nposkey)
--- array of rotations (nrotkey)
--- array of scales (nscalekey)
+  for each channel *in this order*:
+    array of positions (nposkey)
+    array of rotations (nrotkey)
+    array of scales (nscalekey)
  ** NOTE: ALL DATA IS NETWORK ORDER / BIG ENDIAN ** */
 
 // check magic + file size math

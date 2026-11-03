@@ -119,12 +119,8 @@ endif()
 # Sandbox executable for nanus
 add_executable(sandbox
     sandbox/main.cpp
-    sandbox/assimp.cpp
 )
 target_link_libraries(sandbox PRIVATE nanus)
-# Use with assimp
-find_package(assimp REQUIRED)
-target_link_libraries(sandbox PRIVATE assimp::assimp)
 target_compile_options(sandbox PRIVATE
     -Wall
     -Wextra
@@ -160,4 +156,4 @@ target_link_libraries(nanusc PRIVATE assimp::assimp)
 
 
 message(STATUS "SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
-message(STATUS "C COMPILER: ${CMAKE_C_COMPILER}")
+message(STATUS "CPP COMPILER: ${CMAKE_CXX_COMPILER}")

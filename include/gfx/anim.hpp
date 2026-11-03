@@ -34,7 +34,7 @@ struct Animation {
 };
 // NOTE: we use channels here in favor of a raw array because
 // youll end up saving space, since you don't have to encode
-// the bones/channels that don't move during the animation
+// the bones/channels that *don't* move during the animation
 
 // interpolate
 inline mat4 local_transform(const BoneAnimation &channel, float time) {

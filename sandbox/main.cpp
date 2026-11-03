@@ -14,165 +14,6 @@
 #include "util.hpp"
 
 using namespace nanus;
-
-// gfx::Vertex vertices[24] = {
-//     // Front (+Z)
-
-//     {.position{-0.5f, -0.5f, 0.5f},
-//      .normal{0.0f, 0.0f, 1.0f},
-//      .uv{0.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, -0.5f, 0.5f},
-//      .normal{0.0f, 0.0f, 1.0f},
-//      .uv{1.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, 0.5f, 0.5f},
-//      .normal{0.0f, 0.0f, 1.0f},
-//      .uv{1.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, 0.5f, 0.5f},
-//      .normal{0.0f, 0.0f, 1.0f},
-//      .uv{0.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-
-//     // Back (-Z)
-//     {.position{0.5f, -0.5f, -0.5f},
-//      .normal{0.0f, 0.0f, -1.0f},
-//      .uv{0.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, -0.5f, -0.5f},
-//      .normal{0.0f, 0.0f, -1.0f},
-//      .uv{1.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, 0.5f, -0.5f},
-//      .normal{0.0f, 0.0f, -1.0f},
-//      .uv{1.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, 0.5f, -0.5f},
-//      .normal{0.0f, 0.0f, -1.0f},
-//      .uv{0.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-
-//     // Left (-X)
-//     {.position{-0.5f, -0.5f, -0.5f},
-//      .normal{-1.0f, 0.0f, 0.0f},
-//      .uv{0.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, -0.5f, 0.5f},
-//      .normal{-1.0f, 0.0f, 0.0f},
-//      .uv{1.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, 0.5f, 0.5f},
-//      .normal{-1.0f, 0.0f, 0.0f},
-//      .uv{1.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, 0.5f, -0.5f},
-//      .normal{-1.0f, 0.0f, 0.0f},
-//      .uv{0.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-
-//     // Right (+X)
-//     {.position{0.5f, -0.5f, 0.5f},
-//      .normal{1.0f, 0.0f, 0.0f},
-//      .uv{0.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, -0.5f, -0.5f},
-//      .normal{1.0f, 0.0f, 0.0f},
-//      .uv{1.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, 0.5f, -0.5f},
-//      .normal{1.0f, 0.0f, 0.0f},
-//      .uv{1.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, 0.5f, 0.5f},
-//      .normal{1.0f, 0.0f, 0.0f},
-//      .uv{0.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-
-//     // Top (+Y)
-//     {.position{-0.5f, 0.5f, 0.5f},
-//      .normal{0.0f, 1.0f, 0.0f},
-//      .uv{0.0f, 0.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, 0.5f, 0.5f},
-//      .normal{0.0f, 1.0f, 0.0f},
-//      .uv{1.0f, 0.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, 0.5f, -0.5f},
-//      .normal{0.0f, 1.0f, 0.0f},
-//      .uv{1.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, 0.5f, -0.5f},
-//      .normal{0.0f, 1.0f, 0.0f},
-//      .uv{0.0f, 1.0f},
-//      .bone_ids{1, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-
-//     // Bottom (-Y)
-//     {.position{-0.5f, -0.5f, -0.5f},
-//      .normal{0.0f, -1.0f, 0.0f},
-//      .uv{0.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, -0.5f, -0.5f},
-//      .normal{0.0f, -1.0f, 0.0f},
-//      .uv{1.0f, 0.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{0.5f, -0.5f, 0.5f},
-//      .normal{0.0f, -1.0f, 0.0f},
-//      .uv{1.0f, 1.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-//     {.position{-0.5f, -0.5f, 0.5f},
-//      .normal{0.0f, -1.0f, 0.0f},
-//      .uv{0.0f, 1.0f},
-//      .bone_ids{0, 0, 0, 0},
-//      .bone_weights{255, 0, 0, 0}},
-// };
-// gfx::Face indices[12] = {
-
-//     // Front
-//     {0, 1, 3},
-//     {1, 2, 3},
-//     // Back
-//     {4, 5, 7},
-//     {5, 6, 7},
-//     // Left
-//     {8, 9, 11},
-//     {9, 10, 11},
-//     // Right
-//     {12, 13, 15},
-//     {13, 14, 15},
-//     // Top
-//     {16, 17, 19},
-//     {17, 18, 19},
-//     // Bottom
-//     {20, 21, 23},
-//     {21, 22, 23},
-// };
-// mat4 the_bones[2] = {mat4::identity(), mat4::rotate_z(rad(90.0f))};
-// View<mat4> bones_view = {the_bones, 2};
-
 gfx::Pixel pixels1[4] = {gfx::Pixel{0, 255, 0, 255}, gfx::Pixel{0, 255, 0, 255},
                          gfx::Pixel{0, 255, 0, 255}, gfx::Pixel{0, 255, 0, 0}};
 gfx::Pixel pixels2[4] = {gfx::Pixel{0, 0, 255, 255}, gfx::Pixel{0, 0, 255, 255},
@@ -195,11 +36,14 @@ int main(int argc, char **argv) {
   gfx::init();
   input::init();
 
+  // read from file
   platform::FileHandle in_file = platform::fopen(argv[1]);
   usize in_file_size = platform::fsize(in_file);
   std::vector<byte> buf;
   buf.resize(in_file_size);
   platform::fread(buf.data(), in_file_size, in_file);
+
+  // load file to an nmdl
   gfx::Model mod = filetypes::get(*(filetypes::nmdl *)buf.data());
   gfx::TextureHandle model_tex_hdl = gfx::submit(mod.tex);
   gfx::MeshHandle mod_mesh = gfx::submit(mod.mesh);
@@ -352,6 +196,7 @@ int main(int argc, char **argv) {
     // DEBUG_PRINT("after skinned");
     // View<mat4> model_transforms = {skinned_transforms.data(),
     //                                skinned_transforms.size()};
+
     std::vector<mat4> mats;
     for (int i = 0; i < 64; ++i) {
       mats.push_back(mat4::identity());

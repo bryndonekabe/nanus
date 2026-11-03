@@ -45,6 +45,7 @@ template <typename T> struct tquat {
       d = -d;
     }
     // when angle is very close: lerp instead of dividing by sin(theta).
+    // HACK: no magic numbers, make this number configurable/meaningful?
     if (d > T(0.9995)) {
       return (q1 + (q2 - q1) * t).normalized();
     }
@@ -78,6 +79,11 @@ template <typename T> struct tquat {
     tvec3<T> uv = tvec3<T>::cross(u, v);
     tvec3<T> uuv = tvec3<T>::cross(u, uv);
     return v + T(2) * (w * uv + uuv);
+  }
+
+  // casting
+  template <typename Type> explicit operator tquat<Type>() const {
+    return tquat<Type>{(Type)x, (Type)y, (Type)z, (Type)w};
   }
 
   // operators
