@@ -22,11 +22,12 @@ struct LoadedBoneAnimation {
 struct LoadedAnimation {
   double duration;
   std::vector<LoadedBoneAnimation> channels;
-  const char *name;
+  std::string name;
 };
 
 struct LoadedTexture {
-  u32 w, h;
+  u32 w = 0;
+  u32 h = 0;
   std::vector<Pixel> pixels;
 };
 

@@ -8,6 +8,7 @@
 #include <gfx/mesh.hpp>
 #include <gfx/texture.hpp>
 
+#include <string>
 #include <vector>
 
 using namespace nanus;
@@ -54,7 +55,7 @@ struct LoadedBoneAnimation {
 struct LoadedAnimation {
   double duration;
   std::vector<LoadedBoneAnimation> channels;
-  const char *name;
+  std::string name;
 };
 
 struct LoadedTexture {

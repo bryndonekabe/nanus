@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
               model.local_transforms.size(), model.animations.size(),
               model.tex.w, model.tex.h);
   for (int i = 0; i < model.animations.size(); ++i) {
-    DEBUG_PRINT("Anim: %s", model.animations[i].name);
+    DEBUG_PRINT("Anim: %s", model.animations[i].name.c_str());
   }
 
   std::vector<byte> nmdl_bytes;
